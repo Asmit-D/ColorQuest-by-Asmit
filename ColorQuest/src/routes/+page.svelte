@@ -142,3 +142,29 @@
 
     </div>
 </div>
+
+<!-- styling the slider -->
+<style>
+    input[type="range"] {
+    -webkit-appearance: none; /* Override default styling */
+    width: 300px;
+    height: 12px;
+    border-radius: 10px;
+    background: linear-gradient(to right, 
+    #ff0000 0%,
+    #ff9900 10%,
+    #ccff00 20%,
+    #33ff00 30%,
+    #00ff66 40%,
+    #00ffff 50%,
+    #0066ff 60%,
+    #3300ff 70%,
+    #cc00ff 80%,
+    #ff0099 90%,
+    #ff0000 100%
+    );
+    outline: none;
+    opacity: 0.9;
+    transition: opacity .15s ease-in-out;
+  }
+</style>
