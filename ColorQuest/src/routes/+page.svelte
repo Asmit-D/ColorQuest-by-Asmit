@@ -9,6 +9,11 @@
     let ctx;
     let hex,rgb,cmyk,hsl,hsv;
 
+    function updateOutput(){// updates the output canvas
+        output.getContext('2d').fillStyle = `rgb(${convert.hsv.rgb(h,s,v)[0]}, ${convert.hsv.rgb(h,s,v)[1]}, ${convert.hsv.rgb(h,s,v)[2]})`;
+        output.getContext('2d').fillRect(0, 0, output.width, output.height);
+    }
+
     function circleUpdate(){// updates the position of the circle on the canvas
         ctx.globalCompositeOperation = 'overlay';
         ctx.beginPath();
@@ -82,12 +87,14 @@
         codeUpdate();
         pickerUpdate();
         circleUpdate();
+        updateOutput();
     }
 
     function handleHueChange() {// updates the canvas when value of h changes
         pickerUpdate();
         codeUpdate();
         circleUpdate();
+        updateOutput();
     }
 
     onMount(() => {// initializing the canvas and getting dimensions of the canvas
@@ -97,6 +104,7 @@
         codeUpdate();
         pickerUpdate();
         circleUpdate();
+        updateOutput();
     })
 
 </script>
