@@ -1,5 +1,5 @@
 <script>
-    import {onMount} from 'svelte';
+    import {onMount, afterUpdate} from 'svelte';
     import convert from 'color-convert';
     let width,height;
     let s=0,v=100;
@@ -8,6 +8,7 @@
     let output;
     let ctx;
     let hex,rgb,cmyk,hsl,hsv;
+    let grabbed;
 
     function updateOutput(){// updates the output canvas
         output.getContext('2d').fillStyle = `rgb(${convert.hsv.rgb(h,s,v)[0]}, ${convert.hsv.rgb(h,s,v)[1]}, ${convert.hsv.rgb(h,s,v)[2]})`;
@@ -15,19 +16,27 @@
     }
 
     function circleUpdate(){// updates the position of the circle on the canvas
-        ctx.globalCompositeOperation = 'overlay';
+        ctx.globalCompositeOperation = 'source-over';
         ctx.beginPath();
         ctx.arc((s*width/100),((100-v)*height/100),5,0,2*Math.PI);
         ctx.strokeStyle = 'black';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.closePath();
+        ctx.beginPath();
+        ctx.arc((s*width/100),((100-v)*height/100),6,0,2*Math.PI);
+        ctx.strokeStyle = 'white';
         ctx.lineWidth = 1;
         ctx.stroke();
-        ctx.globalCompositeOperation = 'source-over';
+        ctx.closePath();
+        
     }
 
     function codeUpdate(){// updates different color codes from the values of h,s,v
         h = (isNaN(h)) ? 0 : h;
-        let hexCode = convert.hsv.hex(h,s,v);
-        hex= `#${hexCode}`;
+        s = (isNaN(s)) ? 0 : s;
+        v = (isNaN(v)) ? 0 : v;
+        hex= `#${convert.hsv.hex(h,s,v)}`;
         rgb= `${convert.hsv.rgb(h,s,v)[0]}, ${convert.hsv.rgb(h,s,v)[1]}, ${convert.hsv.rgb(h,s,v)[2]}`;
         cmyk= `${convert.hsv.cmyk(h,s,v)[0]}%, ${convert.hsv.cmyk(h,s,v)[1]}%, ${convert.hsv.cmyk(h,s,v)[2]}%, ${convert.hsv.cmyk(h,s,v)[3]}%`;
         hsl= `${convert.hsv.hsl(h,s,v)[0]}°, ${convert.hsv.hsl(h,s,v)[1]}%, ${convert.hsv.hsl(h,s,v)[2]}%`;
@@ -97,6 +106,108 @@
         updateOutput();
     }
 
+// updating value of h,s,v on changing different color codes
+    function handleHexChange(e){
+        let inputCode = e.target.value;
+        inputCode=inputCode.replace('#','');
+        h=convert.hex.hsv(inputCode)[0];
+        s=convert.hex.hsv(inputCode)[1];
+        v=convert.hex.hsv(inputCode)[2];
+        codeUpdate();
+        pickerUpdate();
+        circleUpdate();
+        updateOutput();
+    }
+
+    function handleRgbChange(e){
+        let inputCode = e.target.value;
+        inputCode=inputCode.replace('rgb','').replace(/,/g,'').split(' ');
+        h=convert.rgb.hsv(Number(inputCode[0]),Number(inputCode[1]),Number(inputCode[2]))[0];
+        s=convert.rgb.hsv(Number(inputCode[0]),Number(inputCode[1]),Number(inputCode[2]))[1];
+        v=convert.rgb.hsv(Number(inputCode[0]),Number(inputCode[1]),Number(inputCode[2]))[2];
+        codeUpdate();
+        pickerUpdate();
+        circleUpdate();
+        updateOutput();
+    }
+
+    function handleCmykChange(e){
+        let inputCode = e.target.value+', ';
+        inputCode=inputCode.replace(/%/g,'').replace(/,/g,'').split(' ');
+        h=convert.cmyk.hsv(Number(inputCode[0]),Number(inputCode[1]),Number(inputCode[2]),Number(inputCode[3]))[0];
+        s=convert.cmyk.hsv(Number(inputCode[0]),Number(inputCode[1]),Number(inputCode[2]),Number(inputCode[3]))[1];
+        v=convert.cmyk.hsv(Number(inputCode[0]),Number(inputCode[1]),Number(inputCode[2]),Number(inputCode[3]))[2];
+        console.log(inputCode);
+        console.log(inputCode[0], inputCode[1], inputCode[2], inputCode[3]);
+        console.log(Number(inputCode[0]), Number(inputCode[1]), Number(inputCode[2]), Number(inputCode[3]));
+        
+        codeUpdate();
+        pickerUpdate();
+        circleUpdate();
+        updateOutput();
+    }
+
+    function handleHslChange(e){
+        let inputCode = e.target.value+', ';
+        inputCode=inputCode.replace(/°/g,'').replace(/%/g,'').replace(/,/g,'').split(' ');
+        h=convert.hsl.hsv(Number(inputCode[0]),Number(inputCode[1]),Number(inputCode[2]))[0];
+        s=convert.hsl.hsv(Number(inputCode[0]),Number(inputCode[1]),Number(inputCode[2]))[1];
+        v=convert.hsl.hsv(Number(inputCode[0]),Number(inputCode[1]),Number(inputCode[2]))[2];
+        codeUpdate();
+        pickerUpdate();
+        circleUpdate();
+        updateOutput();
+    }
+
+    function handleHsvChange(e){
+        let inputCode = e.target.value+', ';
+        inputCode=inputCode.replace(/°/g,'').replace(/%/g,'').replace(/,/g,'').split(' ');
+        h=Number(inputCode[0]);
+        s=Number(inputCode[1]);
+        v=Number(inputCode[2]);
+        codeUpdate();
+        pickerUpdate();
+        circleUpdate();
+        updateOutput();
+    }
+
+
+    function circleGrabbed(x,y) {// returns true if the mouse is inside the circle
+        x-= (s*width/100);
+        y-= ((100-v)*height/100);
+        return Math.sqrt(Math.pow(x,2) + Math.pow(y,2)) < 5;
+    }
+
+    function handleMouseDown(e) {// check position of mouse when the user clicks on the canvas
+        let x = e.offsetX;
+        let y = e.offsetY;
+        grabbed = circleGrabbed(x,y);
+    }
+
+    function handleMouseMove(e) {// move circle with mouse if user has grabbed it
+        if(grabbed){
+            let x = e.offsetX;
+            let y = e.offsetY;
+            s = Math.round((x/width)*100);
+            v = 100 - Math.round((y/height)*100);
+            s = 100<s ? 100 : s; // limit the values of s and v
+            s = s<0 ? 0 : s;
+            v = 100<v ? 100 : v;
+            v = v<0 ? 0 : v;
+            console.log(x,y, s,v);
+            
+            codeUpdate();
+            pickerUpdate();
+            circleUpdate();
+            updateOutput();
+        }
+    }
+
+    function handleMouseUp() {// release the circle
+        grabbed = false;
+    }
+
+
     onMount(() => {// initializing the canvas and getting dimensions of the canvas
         width = canvas.offsetWidth;
         height = canvas.offsetHeight;
@@ -104,6 +215,13 @@
         codeUpdate();
         pickerUpdate();
         circleUpdate();
+        updateOutput();
+    })
+
+    afterUpdate(() => {// smoothly update canvas with change in hue
+        pickerUpdate();
+        circleUpdate();
+        codeUpdate();
         updateOutput();
     })
 
@@ -115,10 +233,10 @@
     </div>
     <div class="grid place-items-center">
         <div class="flex md:flex-row flex-col gap-4 p-4 items-center">
-            <div class="border-2">
-                <canvas bind:this={canvas} on:click={handleClick}></canvas>
+            <div class="">
+                <canvas on:mousedown={handleMouseDown} on:mousemove={handleMouseMove} on:mouseup={handleMouseUp} bind:this={canvas} on:click={handleClick}></canvas>
             </div>
-            <div>
+            <div class="border-2">
                 <canvas bind:this={output} width="100" height="100"></canvas>
             </div>
         </div>
@@ -128,24 +246,24 @@
         <div>
             <label for="hex" class="text-white items-center flex flex-col md:flex-row">
                 HEX: 
-                <input type="text" class="bg-slate-900 rounded-full m-2 p-[8px]" value={hex} >
+                <input on:change={handleHexChange} type="text" class="bg-slate-900 rounded-full m-2 p-[8px]" value={hex} >
             </label>
         </div>
         <label for="rgb" class="text-white">
             RGB: 
-            <input type="text" class="bg-slate-900 rounded-full m-2 p-[8px]" value={rgb}>
+            <input on:change={handleRgbChange} type="text" class="bg-slate-900 rounded-full m-2 p-[8px]" value={rgb}>
         </label>
         <label for="cmyk" class="text-white">
             CMYK: 
-            <input type="text" class="bg-slate-900 rounded-full m-2 p-[8px]" value={cmyk}>
+            <input on:change={handleCmykChange} type="text" class="bg-slate-900 rounded-full m-2 p-[8px]" value={cmyk}>
         </label>
         <label for="hsl" class="text-white">
             HSL: 
-            <input type="text" class="bg-slate-900 rounded-full m-2 p-[8px]" value={hsl}>
+            <input on:change={handleHslChange} type="text" class="bg-slate-900 rounded-full m-2 p-[8px]" value={hsl}>
         </label>
         <label for="hsv" class="text-white">
             HSV: 
-            <input type="text" class="bg-slate-900 rounded-full m-2 p-[8px]" value={hsv}>
+            <input on:change={handleHsvChange} type="text" class="bg-slate-900 rounded-full m-2 p-[8px]" value={hsv}>
         </label>
 
     </div>
