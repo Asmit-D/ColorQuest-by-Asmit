@@ -1,6 +1,8 @@
 <script>
     import {onMount, afterUpdate} from 'svelte';
     import convert from 'color-convert';
+    import { Copy } from 'lucide-svelte';
+
     let width,height;
     let s=0,v=100;
     let h = 0;
@@ -171,6 +173,14 @@
         updateOutput();
     }
 
+    async function copyToClipboard() {// copy hex value to clipboard
+    try {
+    await navigator.clipboard.writeText(hex);
+    alert('Copied to clipboard!');
+    } 
+    catch (err) {
+    console.error('Failed to copy text: ', err);
+    }}
 
     function circleGrabbed(x,y) {// returns true if the mouse is inside the circle
         x-= (s*width/100);
@@ -228,12 +238,12 @@
 </script>
 
 <div>
-    <div class="w-fit">
-        <h1 id="silder"class="text-3xl font-bold text-white m-6">ColorQuest</h1>
+    <div class="bg-black w-full p-6 mb-6 rounded-b-3xl z-10">
+        <h1 id="silder"class="text-3xl font-bold text-white ">Color<span class="text-[#c53232]">Q</span><span class="text-[#d2d23c]">u</span><span class="text-[#29be44f3]">e</span><span class="text-[#2e54bb]">s</span><span class="text-[#a138bb]">t</span></h1>
     </div>
     <div class="grid place-items-center">
         <div class="flex md:flex-row flex-col gap-4 p-4 items-center">
-            <div class="">
+            <div class="border-2">
                 <canvas on:mousedown={handleMouseDown} on:mousemove={handleMouseMove} on:mouseup={handleMouseUp} bind:this={canvas} on:click={handleClick}></canvas>
             </div>
             <div class="border-2">
@@ -243,11 +253,12 @@
         <label for="silder" class="p-4">
             <input on:change={handleHueChange} type="range" min="0" max="360" bind:value={h} class="w-[300px] ">
         </label>
-        <div>
+        <div class="flex md:flex-row flex-col gap-4 p-4 items-center">
             <label for="hex" class="text-white items-center flex flex-col md:flex-row">
                 HEX: 
                 <input on:change={handleHexChange} type="text" class="bg-slate-900 rounded-full m-2 p-[8px]" value={hex} >
             </label>
+            <button on:click={copyToClipboard} class="bg-indigo-900 rounded-full m-2 p-[8px]"><Copy /></button>
         </div>
         <label for="rgb" class="text-white">
             RGB: 

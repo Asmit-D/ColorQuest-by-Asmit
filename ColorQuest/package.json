@@ -27,6 +27,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"color-convert": "^2.0.1"
+		"color-convert": "^2.0.1",
+		"lucide-svelte": "^0.452.0"
 	}
 }
