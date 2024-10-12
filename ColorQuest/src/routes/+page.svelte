@@ -101,13 +101,6 @@
         updateOutput();
     }
 
-    function handleHueChange() {// updates the canvas when value of h changes
-        pickerUpdate();
-        codeUpdate();
-        circleUpdate();
-        updateOutput();
-    }
-
 // updating value of h,s,v on changing different color codes
     function handleHexChange(e){
         let inputCode = e.target.value;
@@ -217,7 +210,6 @@
         grabbed = false;
     }
 
-
     onMount(() => {// initializing the canvas and getting dimensions of the canvas
         width = canvas.offsetWidth;
         height = canvas.offsetHeight;
@@ -251,7 +243,7 @@
             </div>
         </div>
         <label for="silder" class="p-4">
-            <input on:change={handleHueChange} type="range" min="0" max="360" bind:value={h} class="w-[300px] ">
+            <input  type="range" min="0" max="360" bind:value={h} class="w-[300px] ">
         </label>
         <div class="flex md:flex-row flex-col gap-4 p-4 items-center">
             <label for="hex" class="text-white items-center flex flex-col md:flex-row">
